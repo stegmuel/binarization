@@ -5,13 +5,16 @@ from keras.models import load_model
 import zipfile
 
 
-
-
 if __name__ == '__main__':
+    data_dir = '../data/train_data'
+    train_list_path = '../data/full_train.lst'
+    validation_list_path = '../data/full_validation.lst'
+    prepare_training(data_dir, train_list_path, validation_list_path, 1000, ratio=0.9)
+
     data_path = '../data/train_data/'
     train_list_path = '../data/full_train.lst'
     validation_list_path = '../data/full_validation.lst'
-    prepare_training(data_path, train_list_path, validation_list_path, 10000, ratio=0.9)
+    prepare_training(data_path, train_list_path, validation_list_path, 1000, ratio=0.9)
 
     data_path = '../'
     models_path = '../models/'
@@ -26,15 +29,14 @@ if __name__ == '__main__':
     validation_generator = DataGenerator(validation_images_names, validation_images_gt_names, 10,
                                          os.path.join(data_path, 'training/validation'))
 
-    if os.path.exists(os.path.join(models_path, 'UNet.h5')):
-        UNet = load_model(os.path.join(models_path, 'UNet.h5'),custom_objects={'jaccard_loss': jaccard_loss,
+    if os.path.exists(os.path.join(models_path, 'UNet_2.h5')):
+        UNet = load_model(os.path.join(models_path, 'UNet_2.h5'), custom_objects={'jaccard_loss': jaccard_loss,
                                                                                'jaccard_accuracy': jaccard_accuracy,
                                                                                'dice_loss': dice_loss,
                                                                                'dice_accuracy': dice_accuracy})
     else:
-        UNet = unet()
+        UNet = unet_learned_up()
         UNet.compile(optimizer=Adam(), loss=jaccard_loss, metrics=['accuracy', jaccard_accuracy, dice_accuracy])
-
 
     UNet.fit_generator(
         generator=train_generator,
@@ -46,4 +48,4 @@ if __name__ == '__main__':
         use_multiprocessing=True,
         workers=4,
     )
-    UNet.save(os.path.join(models_path, 'UNet.h5'))
+    UNet.save(os.path.join(models_path, 'UNet_2.h5'))
