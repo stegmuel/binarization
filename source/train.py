@@ -1,45 +1,21 @@
 from models import *
 from classes import *
 from keras.optimizers import Adam
-import keras.backend as K
 from keras.models import load_model
 import zipfile
 
 
-def jaccard_accuracy(y_true, y_pred):
-    eps = 1.0
-    num = K.sum(y_true * y_pred) + 1.0
-    den = K.sum(y_true + y_pred) - num + 1.0
-    return num / den
-
-
-def jaccard_loss(y_true, y_pred):
-    return 1 - jaccard_accuracy(y_true, y_pred)
-
-
-def dice_accuracy(y_true, y_pred):
-    eps = 1.0
-    num = 2 * K.sum(y_true * y_pred) + 1.0
-    den = K.sum(y_true + y_pred) + 1.0
-    return num / den
-
-
-def dice_loss(y_true, y_pred):
-    return 1 - dice_accuracy(y_true, y_pred)
 
 
 if __name__ == '__main__':
+    data_path = '../data/train_data/'
+    train_list_path = '../data/full_train.lst'
+    validation_list_path = '../data/full_validation.lst'
+    prepare_training(data_path, train_list_path, validation_list_path, 10000, ratio=0.9)
+
     data_path = '../'
     models_path = '../models/'
     training_path = os.path.join(data_path, 'training/')
-
-    # Unzip training data
-    if os.path.exists(training_path):
-        shutil.rmtree(training_path)
-    os.mkdir(training_path)
-
-    with zipfile.ZipFile(os.path.join(data_path, 'training.zip'), 'r') as zip_ref:
-        zip_ref.extractall(training_path)
 
     train_images_names, train_images_gt_names = get_images_names(os.path.join(training_path, 'train.lst'))
     validation_images_names, validation_images_gt_names = \
