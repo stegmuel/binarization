@@ -11,11 +11,6 @@ if __name__ == '__main__':
     validation_list_path = '../data/full_validation.lst'
     prepare_training(data_dir, train_list_path, validation_list_path, 1000, ratio=0.9)
 
-    data_path = '../data/train_data/'
-    train_list_path = '../data/full_train.lst'
-    validation_list_path = '../data/full_validation.lst'
-    prepare_training(data_path, train_list_path, validation_list_path, 1000, ratio=0.9)
-
     data_path = '../'
     models_path = '../models/'
     training_path = os.path.join(data_path, 'training/')
@@ -31,9 +26,9 @@ if __name__ == '__main__':
 
     if os.path.exists(os.path.join(models_path, 'UNet_2.h5')):
         UNet = load_model(os.path.join(models_path, 'UNet_2.h5'), custom_objects={'jaccard_loss': jaccard_loss,
-                                                                               'jaccard_accuracy': jaccard_accuracy,
-                                                                               'dice_loss': dice_loss,
-                                                                               'dice_accuracy': dice_accuracy})
+                                                                                  'jaccard_accuracy': jaccard_accuracy,
+                                                                                  'dice_loss': dice_loss,
+                                                                                  'dice_accuracy': dice_accuracy})
     else:
         UNet = unet_learned_up()
         UNet.compile(optimizer=Adam(), loss=jaccard_loss, metrics=['accuracy', jaccard_accuracy, dice_accuracy])
