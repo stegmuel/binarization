@@ -97,3 +97,44 @@ def prepare_training(data_dir, train_list_path, validation_list_path, num_pairs,
     shutil.make_archive('../training', 'zip', '../training')
 
 
+def load_images(num_images):
+    data_dir = '../data/train_data'
+    train_list_path = '../data/full_train.lst'
+    validation_list_path = '../data/full_validation.lst'
+    prepare_training(data_dir, train_list_path, validation_list_path, num_images, ratio=0.9)
+    train_images_names, train_images_gt_names = get_images_names(os.path.join('../training', 'train.lst'))
+    validation_images_names, validation_images_gt_names = \
+        get_images_names(os.path.join('../training', 'validation.lst'))
+
+    train_images = []
+    train_images_gt = []
+    for train_image_name, train_image_gt_name in zip(train_images_names, train_images_gt_names):
+        train_image = np.load(os.path.join(data_dir, train_image_name))
+        train_image = normalize_image(train_image)
+        train_image = np.expand_dims(train_image, axis=2)
+        train_images.append(train_image)
+
+        train_image_gt = np.load(os.path.join(data_dir, train_image_gt_name))
+        train_image_gt = normalize_image(train_image_gt, gt_bool=True)
+        train_image_gt = np.expand_dims(train_image_gt, axis=2)
+        train_images_gt.append(train_image_gt)
+    train_images = np.asarray(train_images)
+    train_image_gt = np.asarray(train_images_gt)
+
+    validation_images = []
+    validation_images_gt = []
+    for validation_image_name, validation_image_gt_name in zip(validation_images_names, validation_images_gt_names):
+        validation_image = np.load(os.path.join(data_dir, validation_image_name))
+        validation_image = normalize_image(validation_image)
+        validation_image = np.expand_dims(validation_image, axis=2)
+        validation_images.append(validation_image)
+
+        validation_image_gt = np.load(os.path.join(data_dir, validation_image_gt_name))
+        validation_image_gt = normalize_image(validation_image_gt, gt_bool=True)
+        validation_image_gt = np.expand_dims(validation_image_gt, axis=2)
+        validation_images_gt.append(validation_image_gt)
+    validation_images = np.asarray(validation_images)
+    validation_images_gt = np.asarray(validation_images_gt)
+    return train_images, train_images_gt, validation_images, validation_images_gt
+
+

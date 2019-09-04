@@ -6,7 +6,6 @@ from utils import *
 
 class DataGenerator(Sequence):
     """Generate images for training/validation/testing (parallel version)."""
-
     def __init__(self, images_names, images_gt_names, batch_size: int, train_data_dir):
         self.images_names = deepcopy(images_names)
         self.images_gt_names = deepcopy(images_gt_names)

@@ -26,7 +26,8 @@ class UNet:
         self.X = up_block(self.X, down2, filters_size=(3, 3), num_filters=64)
         self.X = up_block(self.X, down1, filters_size=(3, 3), num_filters=32)
 
-        self.X = tf.layers.conv2d(inputs=self.X, filters=1, kernel_size=(1, 1), padding='SAME', activation='sigmoid')
+        self.X = tf.layers.conv2d(inputs=self.X, filters=1, kernel_size=(1, 1), padding='SAME', activation='sigmoid',
+                                  name='output')
         self.output = self.X
 
 
