@@ -4,6 +4,7 @@ from utils import *
 import decimal
 import matplotlib.pyplot as plt
 from tensorflow.python.tools import freeze_graph
+from classes import *
 
 
 def flatten_tensor(tensor):
@@ -62,6 +63,21 @@ def train_batch(train_images, train_images_gt, validation_images, validation_ima
         j_acc, d_acc, b_acc = get_test_accuracy(validation_images, validation_images_gt)
         message = "epoch: {}, jaccard: {}, dice: {}, bce: {}"
         print(message.format(epoch, j_acc, d_acc, b_acc))
+
+
+def train_with_generator(image_name_lst, batch_size, images_dir, images_gt_dir, image_dim, epochs, train_size):
+    train_limit = int(0.9 * len(image_name_lst))
+    train_lst = image_name_lst[:train_limit]
+    validation_lst = image_name_lst[train_limit:]
+    shuffle(train_lst)
+
+    train_generator = ImageGenerator(image_name_lst, batch_size, images_dir, images_gt_dir, image_dim)
+    batches = len(image_name_lst) // batch_size
+    for epoch in range(epochs):
+        for i in range(batches):
+            X_batch, y_batch = train_generator.__getitem__(i)
+            feed_dict_train = {X: X_batch, y: y_batch}
+            session.run(optimizer, feed_dict=feed_dict_train)
 
 
 def get_test_accuracy(validation_images, validation_images_gt):

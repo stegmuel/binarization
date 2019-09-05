@@ -3,6 +3,7 @@ from random import shuffle
 import os
 import shutil
 import keras.backend as K
+import matplotlib.pyplot as plt
 
 
 def jaccard_accuracy(y_true, y_pred):
@@ -55,7 +56,7 @@ def split_data_list(data_path, original_list_path, ratio=0.9):
         [f.write(line) for line in lines[train_stop:]]
 
 
-def prepare_training(data_dir, train_list_path, validation_list_path, num_pairs, ratio=0.9):
+def prepare_training(data_dir, train_list_path, validation_list_path, pairs_num, ratio=0.9):
     train_dir = '../training/train/'
     validation_dir = '../training/validation/'
 
@@ -70,8 +71,8 @@ def prepare_training(data_dir, train_list_path, validation_list_path, num_pairs,
 
     train_images_names, train_images_gt_names = get_images_names(train_list_path)
     validation_images_names, validation_images_gt_names = get_images_names(validation_list_path)
-    train_stop = int(ratio * num_pairs)
-    validation_stop = int((1-ratio) * num_pairs)
+    train_stop = int(ratio * pairs_num)
+    validation_stop = int((1-ratio) * pairs_num)
     train_pairs = zip(train_images_names[:train_stop], train_images_gt_names[:train_stop])
     validation_pairs = zip(validation_images_names[:validation_stop], validation_images_gt_names[:validation_stop])
 
@@ -95,6 +96,60 @@ def prepare_training(data_dir, train_list_path, validation_list_path, num_pairs,
 
     # zip training directory
     shutil.make_archive('../training', 'zip', '../training')
+
+
+def prepare_training_images(data_dir, train_list_path, validation_list_path, pairs_num, ratio=0.9):
+    train_images_dir = '../training/train_images/'
+    train_images_gt_dir = '../training/train_images_gt/'
+    validation_images_dir = '../training/validation_images/'
+    validation_images_gt_dir = '../training/validation_images_gt/'
+
+    # Prepare directories
+    if os.path.exists(train_images_dir):
+        shutil.rmtree(train_images_dir)
+    if os.path.exists(train_images_gt_dir):
+        shutil.rmtree(train_images_gt_dir)
+    if os.path.exists(validation_images_dir):
+        shutil.rmtree(validation_images_dir)
+    if os.path.exists(validation_images_gt_dir):
+        shutil.rmtree(validation_images_gt_dir)
+
+    os.mkdir(train_images_dir)
+    os.mkdir(train_images_gt_dir)
+    os.mkdir(validation_images_dir)
+    os.mkdir(validation_images_gt_dir)
+
+    # Get images' names
+    train_images_names, train_images_gt_names = get_images_names(train_list_path)
+    validation_images_names, validation_images_gt_names = get_images_names(validation_list_path)
+    train_stop = int(ratio * pairs_num)
+    validation_stop = int((1-ratio) * pairs_num)
+    train_pairs = zip(train_images_names[:train_stop], train_images_gt_names[:train_stop])
+    validation_pairs = zip(validation_images_names[:validation_stop], validation_images_gt_names[:validation_stop])
+
+    # Create training list and move data
+    train_list = open('../training/train_images.lst', 'w')
+    for image_name, image_gt_name in train_pairs:
+        train_list.write(image_name.split('.')[0] + '.jpg ' + image_gt_name.split('.')[0] + '.jpg\n')
+        image_path = os.path.join(data_dir, image_name)
+        image_gt_path = os.path.join(data_dir, image_gt_name)
+        image = np.load(image_path)
+        image_gt = np.load(image_gt_path)
+        plt.imsave(os.path.join(train_images_dir, image_name.split('.')[0] + '.jpg'), image)
+        plt.imsave(os.path.join(train_images_gt_dir, image_name.split('.')[0] + '.jpg'), image_gt)
+    train_list.close()
+
+    validation_list = open('../training/validation_images.lst', 'w')
+    for image_name, image_gt_name in validation_pairs:
+        validation_list.write(image_name.split('.')[0] + '.jpg ' + image_gt_name.split('.')[0] + '.jpg\n')
+        image_path = os.path.join(data_dir, image_name)
+        image_gt_path = os.path.join(data_dir, image_gt_name)
+        image = np.load(image_path)
+        image_gt = np.load(image_gt_path)
+        plt.imsave(os.path.join(validation_images_dir, image_name.split('.')[0] + '.jpg'), image)
+        plt.imsave(os.path.join(validation_images_gt_dir, image_name.split('.')[0] + '.jpg'), image_gt)
+    validation_list.close()
+
 
 
 def load_images(num_images):

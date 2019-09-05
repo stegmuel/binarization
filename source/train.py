@@ -6,41 +6,34 @@ import zipfile
 
 
 if __name__ == '__main__':
-    data_dir = '../data/train_data'
-    train_list_path = '../data/full_train.lst'
-    validation_list_path = '../data/full_validation.lst'
-    prepare_training(data_dir, train_list_path, validation_list_path, 1000, ratio=0.9)
-
-    data_path = '../'
+    images_dir = '../data/new_data/image'
+    images_gt_dir = '../data/new_data/image_gt'
     models_path = '../models/'
-    training_path = os.path.join(data_path, 'training/')
+    model_name = 'UNet_3.h5'
 
-    train_images_names, train_images_gt_names = get_images_names(os.path.join(training_path, 'train.lst'))
-    validation_images_names, validation_images_gt_names = \
-        get_images_names(os.path.join(training_path, 'validation.lst'))
+    image_name_lst = [image_name for image_name in os.listdir(images_dir)]
+    shuffle(image_name_lst)
+    train_generator = ImageGenerator(image_name_lst[:1000], 10, images_dir, images_gt_dir, 128)
+    validation_generator = ImageGenerator(image_name_lst[1000:1100], 10, images_dir, images_gt_dir, 128)
+    images, images_gt = validation_generator.__getitem__(0)
 
-    train_generator = DataGenerator(train_images_names, train_images_gt_names, 10,
-                                    os.path.join(data_path, 'training/train/'))
-    validation_generator = DataGenerator(validation_images_names, validation_images_gt_names, 10,
-                                         os.path.join(data_path, 'training/validation'))
-
-    if os.path.exists(os.path.join(models_path, 'UNet_2.h5')):
-        UNet = load_model(os.path.join(models_path, 'UNet_2.h5'), custom_objects={'jaccard_loss': jaccard_loss,
-                                                                                  'jaccard_accuracy': jaccard_accuracy,
-                                                                                  'dice_loss': dice_loss,
-                                                                                  'dice_accuracy': dice_accuracy})
+    if os.path.exists(os.path.join(models_path, model_name)):
+        UNet = load_model(os.path.join(models_path, model_name), custom_objects={'jaccard_accuracy': jaccard_accuracy,
+                                                                                 'jaccard_loss': jaccard_loss,
+                                                                                 'dice_accuracy': dice_accuracy,
+                                                                                 'dice_loss': dice_loss})
     else:
         UNet = unet_learned_up()
         UNet.compile(optimizer=Adam(), loss=jaccard_loss, metrics=['accuracy', jaccard_accuracy, dice_accuracy])
 
     UNet.fit_generator(
         generator=train_generator,
-        steps_per_epoch=train_generator.__len__(),  # Compatibility with old Keras versions.
+        steps_per_epoch=train_generator.__len__(),
         validation_data=validation_generator,
-        validation_steps=validation_generator.__len__(),  # Compatibility with old Keras versions.
+        validation_steps=validation_generator.__len__(),
         epochs=1,
         shuffle=True,
         use_multiprocessing=True,
         workers=4,
     )
-    UNet.save(os.path.join(models_path, 'UNet_2.h5'))
+    UNet.save(os.path.join(models_path, 'UNet_3.h5'))

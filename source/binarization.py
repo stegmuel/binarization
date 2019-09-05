@@ -3,6 +3,7 @@ import os
 from utils import *
 import matplotlib.pyplot as plt
 from PIL import Image
+import argparse
 
 
 def split_image(image, crop_size=128):
@@ -44,20 +45,28 @@ def merge_predictions(pred_images, shape, crop_size=128):
 
 
 if __name__ == '__main__':
+    # Parse arguments from user
+    parser = argparse.ArgumentParser(description='Binarize the input image using a UNet architecture')
+    parser.add_argument('image', metavar='image', type=str, help='Path to input image')
+    parser.add_argument('model', metavar='model', type=str, help='Path to model to use for binarization')
+    args = parser.parse_args()
+
+    print(args.image)
     # Load input image
-    image_path = '../data/DIPCO2016_dataset/8.bmp'
+    #image_path = '../data/DIPCO2016_dataset/7.bmp'
+    image_path = args.image
     image = np.array(Image.open(image_path).convert('L'), dtype=np.uint8)
 
     # Split image to fit model's input requirements
     images, shape = split_image(image)
 
     # Load the model
-    model_path = '../models/'
-    mode_name = 'UNet.h5'
-    UNet = load_model(os.path.join(model_path, 'UNet_2.h5'), custom_objects={'jaccard_loss': jaccard_loss,
-                                                                             'jaccard_accuracy': jaccard_accuracy,
-                                                                             'dice_loss': dice_loss,
-                                                                             'dice_accuracy': dice_accuracy})
+    #model_path = '../models/'
+    model_path = args.model
+    UNet = load_model(model_path, custom_objects={'jaccard_loss': jaccard_loss,
+                                                  'jaccard_accuracy': jaccard_accuracy,
+                                                  'dice_loss': dice_loss,
+                                                  'dice_accuracy': dice_accuracy})
 
     # Get binary images
     pred_images = np.squeeze(predict_images(images, UNet))

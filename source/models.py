@@ -3,6 +3,7 @@ from keras.layers.core import SpatialDropout2D, Activation
 from keras.layers.merge import concatenate
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
+import Augmentor
 
 
 def conv_block(X, num_output_channels):
