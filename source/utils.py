@@ -193,3 +193,38 @@ def load_images(num_images):
     return train_images, train_images_gt, validation_images, validation_images_gt
 
 
+def split_image(image, crop_size=128):
+    H = image.shape[0]
+    W = image.shape[1]
+    new_H = 128 * (H // crop_size + 1)
+    new_W = 128 * (W // crop_size + 1)
+    upper_padding = (new_H - H) // 2
+    lower_padding = new_H - H - upper_padding
+    left_padding = (new_W - W) // 2
+    right_padding = new_W - W - left_padding
+    image = np.pad(image, ((upper_padding, lower_padding), (left_padding, right_padding)), 'constant',
+                   constant_values=np.median(image))
+    padding = {'upper': upper_padding,
+               'lower': lower_padding,
+               'left': left_padding,
+               'right': right_padding}
+    images = []
+    for row in range(0, new_H, crop_size):
+        for col in range(0, new_W, crop_size):
+            image_cropped = image[row:row+crop_size, col:col+crop_size]
+            image_cropped = normalize_image(image_cropped)
+            images.append(image_cropped)
+    images = np.asarray(images)
+
+    return images, (new_H // crop_size, new_W // crop_size), padding
+
+
+def merge_predictions(pred_images, shape, crop_size=128):
+    full_image = np.zeros((crop_size * shape[0], crop_size * shape[1]))
+    for row in range(shape[0]):
+        for col in range(shape[1]):
+            pred_image = pred_images[row * shape[1] + col]
+            full_image[row * crop_size: (row + 1) * crop_size, col * crop_size: (col + 1) * crop_size] = pred_image
+    full_image[full_image > 0.5] = 255
+    full_image[full_image <= 0.5] = 0
+    return full_image.astype(np.uint8)

@@ -4,29 +4,7 @@ from utils import *
 import matplotlib.pyplot as plt
 from PIL import Image
 import argparse
-
-
-def split_image(image, crop_size=128):
-    shape = image.shape
-    H = image.shape[0]
-    W = image.shape[1]
-    new_H = 128 * (H // crop_size + 1)
-    new_W = 128 * (W // crop_size + 1)
-    upper_padding = (new_H - H) // 2
-    lower_padding = new_H - H - upper_padding
-    left_padding = (new_W - W) // 2
-    right_padding = new_W - W - left_padding
-    image = np.pad(image, ((upper_padding, lower_padding), (left_padding, right_padding)), 'constant',
-                   constant_values=np.median(image))
-    images = []
-    for row in range(0, new_H, crop_size):
-        for col in range(0, new_W, crop_size):
-            image_cropped = image[row:row+crop_size, col:col+crop_size]
-            image_cropped = normalize_image(image_cropped)
-            images.append(image_cropped)
-    images = np.asarray(images)
-
-    return images, (new_H // crop_size, new_W // crop_size)
+import tensorflow as tf
 
 
 def predict_images(images, model):
@@ -35,33 +13,23 @@ def predict_images(images, model):
     return pred_images
 
 
-def merge_predictions(pred_images, shape, crop_size=128):
-    full_image = np.zeros((crop_size * shape[0], crop_size * shape[1]))
-    for row in range(shape[0]):
-        for col in range(shape[1]):
-            pred_image = pred_images[row * shape[1] + col]
-            full_image[row * crop_size: (row + 1) * crop_size, col * crop_size: (col + 1) * crop_size] = pred_image
-    return full_image
-
-
 if __name__ == '__main__':
     # Parse arguments from user
-    parser = argparse.ArgumentParser(description='Binarize the input image using a UNet architecture')
-    parser.add_argument('image', metavar='image', type=str, help='Path to input image')
-    parser.add_argument('model', metavar='model', type=str, help='Path to model to use for binarization')
+    parser = argparse.ArgumentParser(description='Binarize the input image using a UNet architecture.')
+    parser.add_argument('image', metavar='image', type=str, help='Path to input image.')
+    parser.add_argument('model', metavar='model', type=str,
+                        help='Path to model (ex: model.h5) to be used for binarization.')
+    parser.add_argument('save_path', metavar='save_path', type=str, help='Path to save the binary image.')
     args = parser.parse_args()
 
-    print(args.image)
     # Load input image
-    #image_path = '../data/DIPCO2016_dataset/7.bmp'
     image_path = args.image
     image = np.array(Image.open(image_path).convert('L'), dtype=np.uint8)
 
     # Split image to fit model's input requirements
-    images, shape = split_image(image)
+    images, shape, padding = split_image(image)
 
     # Load the model
-    #model_path = '../models/'
     model_path = args.model
     UNet = load_model(model_path, custom_objects={'jaccard_loss': jaccard_loss,
                                                   'jaccard_accuracy': jaccard_accuracy,
@@ -73,6 +41,10 @@ if __name__ == '__main__':
 
     # Merge binary images
     binary_image = merge_predictions(pred_images, shape)
+    binary_image = binary_image[padding['upper']:-padding['lower'], padding['left']:-padding['right']]
     plt.imshow(binary_image, cmap='gray')
     plt.show()
+    binary_image = Image.fromarray(binary_image)
+    binary_image.save(args.save_path)
+
 
